@@ -1,5 +1,6 @@
 <html>
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="refresh" content="10">
 <link rel="stylesheet" href="results-style.css">
@@ -8,35 +9,35 @@
   body { font-family: Arial; margin: 0; padding: 10px; background: #f4f4f4; }
   .container { max-width: 800px; margin: auto; background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
   table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
-  .header-table { border: 2px solid black; background: #eee; font-weight: bold; margin-top: 20px; }
-  td { border: 1px solid #999; padding: 4px; }
+  .header-table { border: 2px solid black; background: #eee; font-weight: bold; margin-top: 20px; font-size: 18px; }
+  td { border: 1px solid #999; padding: 4px; word-wrap: break-word; overflow-wrap: break-word; }
   table[border="1"] { font-size: 14px; }
+  table[border="1"] tr:first-child { font-weight: bold; font-size: 15px; background-color: #e5e7eb; }
   .header-text { text-align: center; font-weight: bold; font-size: 22px; color: #1e3a8a; text-transform: uppercase; }
+  
+  @media (max-width: 768px) {
+    .container { padding: 10px; }
+    .header-table { font-size: 14px; }
+    table[border="1"] { font-size: 11px; }
+    table[border="1"] tr:first-child { font-size: 12px; }
+    td { padding: 2px 3px; font-size: 11px; }
+    .header-text { font-size: 18px; }
+  }
+  
+  @media (max-width: 480px) {
+    .container { padding: 5px; }
+    .header-table { font-size: 12px; }
+    table[border="1"] { font-size: 10px; }
+    table[border="1"] tr:first-child { font-size: 11px; }
+    td { padding: 1px 2px; font-size: 10px; }
+    .header-text { font-size: 16px; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
 <p class="header-text">Absolut Menlo Massa</p>
-<table class="header-table"><tr><td> 1 </td><td> 14:30 </td><td>  </td><td> Final 3 of 3  Girls 14  200m Hurdles </td><td>  </td></tr>
-<table border="1">
-<tr><td> Lane </td><td> Number </td><td> Athlete </td><td> Team </td></tr>
-<tr><td> 2 </td><td>  </td><td> MALAN  KAYLA </td><td> WATERKLOOF </td></tr>
-<tr><td> 3 </td><td>  </td><td> IVANOV  KATARINA </td><td> WATERKLOOF </td></tr>
-<tr><td> 4 </td><td>  </td><td> BARNARD  MIEKE </td><td> WATERKLOOF </td></tr>
-<tr><td> 5 </td><td>  </td><td> MOOLMAN  MILANE </td><td> MENLOPARK </td></tr>
-<tr><td> 6 </td><td>  </td><td> DU PLESSIS  ZINEL </td><td> AFRIKAANS HO�R MEISIES </td></tr>
-<tr><td> 7 </td><td>  </td><td> MARE  MIA </td><td> WATERKLOOF </td></tr>
-<tr><td> 8 </td><td>  </td><td> VON WIELLIGH  JANE </td><td> MENLOPARK </td></tr>
-</table></table><BR><table class="header-table"><tr><td> 11 </td><td> 14:38 </td><td>  </td><td> Final 1 of 2  Girls 15  200m Hurdles </td><td> 76.2cm </td></tr>
-<table border="1">
-<tr><td> Lane </td><td> Number </td><td> Athlete </td><td> Team </td></tr>
-<tr><td> 3 </td><td>  </td><td> VAN WYK  ZIA </td><td> AFRIKAANS HO�R MEISIES </td></tr>
-<tr><td> 4 </td><td>  </td><td> NIEKERK  HAYLEE </td><td> WATERKLOOF </td></tr>
-<tr><td> 5 </td><td>  </td><td> SAAYMAN  CARLA </td><td> WATERKLOOF </td></tr>
-<tr><td> 6 </td><td>  </td><td> YOUNG  HANNAH </td><td> GARSFONTEIN </td></tr>
-<tr><td> 7 </td><td>  </td><td> PRETORIUS  LARISSA </td><td> WATERKLOOF </td></tr>
-<tr><td> 8 </td><td>  </td><td> LOOTS  JESSICA </td><td> AFRIKAANS HO�R MEISIES </td></tr>
-</table></table><BR><table class="header-table"><tr><td> 11 </td><td> 14:38 </td><td>  </td><td> Final 2 of 2  Girls 15  200m Hurdles </td><td> 76.2cm </td></tr>
+<table class="header-table"><tr><td> 11 </td><td> 14:38 </td><td>  </td><td> Final 2 of 2  Girls 15  200m Hurdles </td><td> 76.2cm </td></tr>
 <table border="1">
 <tr><td> Lane </td><td> Number </td><td> Athlete </td><td> Team </td></tr>
 <tr><td> 3 </td><td>  </td><td> BRINK  RHILEY </td><td> GARSFONTEIN </td></tr>
