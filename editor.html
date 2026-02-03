@@ -427,6 +427,7 @@
       <div class="header">
         <h1 id="meetingTitle">Loading...</h1>
         <div class="header-actions">
+          <button class="btn-secondary" onclick="toggleDebug()">🐛 Debug</button>
           <button class="btn-secondary" onclick="loadData()">🔄 Refresh</button>
           <button class="btn-primary" onclick="saveChanges()">💾 Save Changes</button>
           <button class="btn-secondary" onclick="logout()">🚪 Logout</button>
@@ -434,6 +435,15 @@
       </div>
 
       <div class="status-bar" id="statusBar">Ready to edit</div>
+
+      <div class="status-bar" id="debugInfo" style="display: none; font-family: monospace; font-size: 12px;">
+        <strong>Debug Info:</strong><br>
+        Token: <span id="debugToken">-</span><br>
+        Owner: <span id="debugOwner">-</span><br>
+        Repo: <span id="debugRepo">-</span><br>
+        File: <span id="debugFile">-</span><br>
+        URL: <span id="debugUrl">-</span>
+      </div>
 
       <div class="events-container" id="eventsContainer">
         <!-- Events will be loaded here -->
@@ -450,6 +460,11 @@
   </div>
 
   <script>
+    // Browser compatibility check
+    if (!window.fetch) {
+      alert('Your browser is not supported. Please use a modern browser like Chrome, Firefox, or Safari.');
+    }
+
     // Configuration
     const CREDENTIALS = {
       username: 'editor',  // Change this
@@ -500,10 +515,14 @@
     // Check if already logged in
     window.addEventListener('load', () => {
       const authenticated = sessionStorage.getItem('authenticated');
-      if (authenticated === 'true') {
-        githubConfig.token = sessionStorage.getItem('githubToken');
-        githubConfig.owner = sessionStorage.getItem('repoOwner');
-        githubConfig.repo = sessionStorage.getItem('repoName');
+      const token = sessionStorage.getItem('githubToken');
+      const owner = sessionStorage.getItem('repoOwner');
+      const repo = sessionStorage.getItem('repoName');
+      
+      if (authenticated === 'true' && token && owner && repo) {
+        githubConfig.token = token;
+        githubConfig.owner = owner;
+        githubConfig.repo = repo;
 
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('editorScreen').style.display = 'block';
@@ -514,6 +533,24 @@
     function logout() {
       sessionStorage.clear();
       location.reload();
+    }
+
+    function toggleDebug() {
+      const debugInfo = document.getElementById('debugInfo');
+      const isVisible = debugInfo.style.display !== 'none';
+      debugInfo.style.display = isVisible ? 'none' : 'block';
+      
+      if (!isVisible) {
+        updateDebugInfo();
+      }
+    }
+
+    function updateDebugInfo() {
+      document.getElementById('debugToken').textContent = githubConfig.token ? githubConfig.token.substring(0, 10) + '...' : 'Not set';
+      document.getElementById('debugOwner').textContent = githubConfig.owner || 'Not set';
+      document.getElementById('debugRepo').textContent = githubConfig.repo || 'Not set';
+      document.getElementById('debugFile').textContent = githubConfig.sourceFile;
+      document.getElementById('debugUrl').textContent = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.sourceFile}`;
     }
 
     function showLoading(show) {
@@ -531,23 +568,61 @@
       setStatus('Loading data from GitHub...', 'loading');
 
       try {
+        // Validate configuration
+        if (!githubConfig.token || !githubConfig.owner || !githubConfig.repo) {
+          throw new Error('Missing GitHub configuration. Please login again.');
+        }
+
         const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.sourceFile}`;
+        
+        setStatus('Connecting to GitHub API...', 'loading');
+        
         const response = await fetch(url, {
+          method: 'GET',
           headers: {
             'Authorization': `token ${githubConfig.token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'StartersEditor'
+          },
+          mode: 'cors',
+          cache: 'no-cache'
+        }).catch(err => {
+          throw new Error(`Network error: ${err.message}. Check your internet connection.`);
         });
 
-        if (!response.ok) throw new Error('Failed to fetch file');
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Invalid GitHub token. Please check your token and try again.');
+          } else if (response.status === 404) {
+            throw new Error(`File not found: ${githubConfig.sourceFile}. Make sure the file exists in your repository.`);
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`GitHub API error (${response.status}): ${errorData.message || 'Unknown error'}`);
+          }
+        }
 
+        setStatus('Processing file data...', 'loading');
         const data = await response.json();
-        const content = atob(data.content);
+        
+        if (!data.content) {
+          throw new Error('File content is empty or invalid');
+        }
+        
+        const content = atob(data.content.replace(/\n/g, ''));
         parseHTML(content);
         renderEvents();
-        setStatus('✅ Data loaded successfully', 'success');
+        setStatus('✅ Data loaded successfully - ' + eventsData.length + ' events found', 'success');
       } catch (error) {
-        setStatus('❌ Error loading data: ' + error.message, 'error');
+        console.error('Load error:', error);
+        let errorMsg = error.message || 'Unknown error';
+        setStatus('❌ Error: ' + errorMsg, 'error');
+        
+        // If config is missing, redirect to login
+        if (!githubConfig.token) {
+          setTimeout(() => {
+            logout();
+          }, 3000);
+        }
       } finally {
         showLoading(false);
       }
@@ -863,4 +938,5 @@ ${eventsHTML}
     }
   </script>
 </body>
+</html>
 </html>
