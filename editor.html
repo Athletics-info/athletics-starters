@@ -906,7 +906,7 @@
       
       let eventsHTML = eventsData.map(event => {
         const athletesRows = event.athletes.map(athlete => 
-          `<tr><td>${athlete.lane}</td><td>${athlete.number}</td><td>${athlete.athlete}</td><td>${athlete.team}</td></tr>`
+          `<tr><td>${athlete.lane}</td><td>${athlete.number.toUpperCase()}</td><td>${athlete.athlete.toUpperCase()}</td><td>${athlete.team.toUpperCase()}</td></tr>`
         ).join('\n');
 
         return `${event.header}
