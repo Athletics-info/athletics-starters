@@ -460,6 +460,15 @@
   </div>
 
   <script>
+  
+  function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
     // Browser compatibility check
     if (!window.fetch) {
       alert('Your browser is not supported. Please use a modern browser like Chrome, Firefox, or Safari.');
@@ -608,7 +617,17 @@
           throw new Error('File content is empty or invalid');
         }
         
-        const content = atob(data.content.replace(/\n/g, ''));
+        function fromBase64UTF8(base64) {
+  const binary = atob(base64.replace(/\n/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+// Then:
+const content = fromBase64UTF8(data.content);
         parseHTML(content);
         renderEvents();
         setStatus('✅ Data loaded successfully - ' + eventsData.length + ' events found', 'success');
@@ -875,7 +894,10 @@
         // Upload file
         const body = {
           message: 'Update starters from tablet editor',
-          content: btoa(unescape(encodeURIComponent(html))),
+      content: btoa(                      // base64
+  new TextEncoder().encode(html)    // UTF-8 bytes
+    .reduce((str, byte) => str + String.fromCharCode(byte), '')
+)
           branch: 'main'
         };
 
@@ -901,22 +923,46 @@
       }
     }
 
-    function generateHTML() {
-      const meetingTitle = document.getElementById('meetingTitle').textContent;
-      
-      let eventsHTML = eventsData.map(event => {
-        const athletesRows = event.athletes.map(athlete => 
-          `<tr><td>${athlete.lane}</td><td>${athlete.number.toUpperCase()}</td><td>${athlete.athlete.toUpperCase()}</td><td>${athlete.team.toUpperCase()}</td></tr>`
-        ).join('\n');
+function generateHTML() {
+  const meetingTitle = document.getElementById('meetingTitle').textContent;
+  
+  let eventsHTML = eventsData.map(event => {
+    const athletesRows = event.athletes.map(athlete => 
+      `<tr><td>${athlete.lane}</td>` +
+      `<td>${escapeHtml(athlete.number.toUpperCase())}</td>` +
+      `<td>${escapeHtml(athlete.athlete.toUpperCase())}</td>` +
+      `<td>${escapeHtml(athlete.team.toUpperCase())}</td></tr>`
+    ).join('\n');
 
-        return `${event.header}
+    return `${event.header}
 <table border="1">
 <tr><td>Lane</td><td>Number</td><td>Athlete</td><td>Team</td></tr>
 ${athletesRows}
 </table>`;
-      }).join('<BR>\n');
+  }).join('<BR>\n');
 
-      return `<html>
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(meetingTitle)} – Starters</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f4f4; }
+    .header-text { text-align: center; font-weight: bold; font-size: 22px; color: #1e3a8a; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+    .header-table { border: 2px solid black; background: #eee; font-weight: bold; margin-top: 20px; font-size: 18px; }
+    td { border: 1px solid #999; padding: 4px; }
+    table[border="1"] { font-size: 14px; }
+    table[border="1"] tr:first-child { font-weight: bold; font-size: 15px; background-color: #e5e7eb; }
+  </style>
+</head>
+<body>
+<p class="header-text">${escapeHtml(meetingTitle)}</p>
+${eventsHTML}
+</body>
+</html>`;
+}
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
