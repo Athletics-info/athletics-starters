@@ -922,10 +922,7 @@ const content = fromBase64UTF8(data.content);
         // Upload file
         const body = {
           message: 'Update starters from tablet editor',
-      content: btoa(                      // base64
-  new TextEncoder().encode(html)    // UTF-8 bytes
-    .reduce((str, byte) => str + String.fromCharCode(byte), '')
-)
+          content: btoa(unescape(encodeURIComponent(html))),
           branch: 'main'
         };
 
