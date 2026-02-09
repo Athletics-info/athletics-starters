@@ -110,11 +110,14 @@
 
     /* Editor Screen */
     .editor-screen {
-      display: none;
+      display: none; /* Hidden by default, shown via JavaScript */
       height: 100vh;
       overflow: hidden;
-      display: flex;
       flex-direction: column;
+    }
+
+    .editor-screen.active {
+      display: flex;
     }
 
     .container {
@@ -545,7 +548,7 @@
         sessionStorage.setItem('authenticated', 'true');
 
         document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('editorScreen').style.display = 'flex';
+        document.getElementById('editorScreen').classList.add('active');
         loadData();
       } else {
         document.getElementById('loginError').style.display = 'block';
@@ -562,7 +565,7 @@
         // owner and repo already hardcoded
 
         document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('editorScreen').style.display = 'flex';
+        document.getElementById('editorScreen').classList.add('active');
         loadData();
       }
     });
@@ -984,6 +987,7 @@ ${eventsHTML}
 </body>
 </html>`;
 }
+
   </script>
 </body>
 </html>
