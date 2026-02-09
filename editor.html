@@ -5,52 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Starters Editor</title>
   <style>
-    /* Styles preserved from your layout */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-    .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; }
-    .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-    .login-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 400px; width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* Login Screen */
+    .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .login-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
     .input-group { margin-bottom: 20px; }
     .input-group label { display: block; margin-bottom: 8px; font-weight: 500; }
     .input-group input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; }
     .btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .editor-screen { display: none; flex-direction: column; }
-    .editor-screen.active { display: flex; }
-   /* .header { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }*/
-	.header {  background: white;  padding: 20px;  border-radius: 12px;  box-shadow: 0 4px 12px rgba(0,0,0,0.1);  margin-bottom: 20px;  display: flex;  justify-content: space-between;  align-items: center;  /* Frozen/Sticky Logic */  position: sticky;   top: 0;   z-index: 1000; }
+
+    /* Editor Screen */
+    .editor-screen { display: none; }
+    .editor-screen.active { display: block; }
+
+    .header {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      /* Sticky/Frozen Header Logic */
+      position: sticky;
+      top: 10px;
+      z-index: 1000;
+    }
+
     .header-actions { display: flex; gap: 10px; }
-    .btn-secondary { padding: 10px 20px; background: #f5f5f5; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; }
-    .btn-primary { padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-secondary { padding: 10px 20px; background: #f5f5f5; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-primary { padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
     .status-bar { background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; }
     .status-bar.success { background: #d4edda; color: #155724; }
-    .status-bar.error { background: #f8d7da; color: #721c24; }
-    .event-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 20px; }
+    .status-bar.loading { background: #fff3cd; color: #856404; }
+
+    .event-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 30px; }
     .event-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; font-weight: 600; display: flex; justify-content: space-between; }
     .event-table { width: 100%; border-collapse: collapse; }
-    .event-table th { padding: 12px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e0e0e0; font-size: 13px; }
+    .event-table th { padding: 12px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e0e0e0; color: #666; font-size: 13px; }
     .event-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+
+    /* Drag and Drop Visuals */
     .athlete-row { cursor: move; }
-    .athlete-row.dragging { opacity: 0.5; background: #e3f2fd; }
+    .athlete-row.dragging { opacity: 0.4; background: #e3f2fd; }
     .athlete-row.drag-over { border-top: 3px solid #667eea; }
-    .editable-cell { cursor: text; }
-    .editable-cell input { width: 100%; padding: 4px; }
-    .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; color: white; }
+
+    .editable-cell { cursor: text; min-width: 50px; }
+    .editable-cell:hover { background: #fff9c4; }
+    .editable-cell input { width: 100%; padding: 4px; border: 1px solid #667eea; }
+
+    .loading-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 2000; color: white; }
   </style>
 </head>
 <body>
+
   <div class="login-screen" id="loginScreen">
     <div class="login-box">
       <h1>🏃‍♂️ Starters Editor</h1>
-      <div class="error-message" id="loginError" style="color: red; display:none; margin-bottom:10px;">Invalid credentials</div>
       <form id="loginForm">
-        <div class="input-group"><label>Username</label><input type="text" id="username" required></div>
+        <div class="input-group"><label>Username</label><input type="text" id="username" value="editor" required></div>
         <div class="input-group"><label>Password</label><input type="password" id="password" required></div>
-        <div class="input-group">
-          <label>GitHub Token</label>
-          <input type="password" id="githubToken" placeholder="ghp_xxx" required>
-          <label style="font-size: 12px; margin-top:5px;"><input type="checkbox" id="rememberToken"> Remember Token</label>
-        </div>
+        <div class="input-group"><label>GitHub Token</label><input type="password" id="githubToken" required></div>
         <button type="submit" class="btn">Login</button>
       </form>
     </div>
@@ -61,18 +86,18 @@
       <div class="header">
         <h1 id="meetingTitle">Loading...</h1>
         <div class="header-actions">
-          <button class="btn-secondary" onclick="undoChanges()">↩️ Undo</button>
+          <button class="btn-secondary" onclick="undoChanges()">↩️ Undo Changes</button>
           <button class="btn-secondary" onclick="loadData()">🔄 Refresh</button>
           <button class="btn-primary" onclick="saveChanges()">💾 Save Changes</button>
           <button class="btn-secondary" onclick="logout()">🚪 Logout</button>
         </div>
       </div>
       <div class="status-bar" id="statusBar">Ready</div>
-      <div class="events-container" id="eventsContainer"></div>
+      <div id="eventsContainer"></div>
     </div>
   </div>
 
-  <div class="loading-overlay" id="loadingOverlay"><div>Loading...</div></div>
+  <div class="loading-overlay" id="loadingOverlay"><h2>Syncing with GitHub...</h2></div>
 
   <script>
     const CREDENTIALS = { username: 'editor', password: 'athletics2026' };
@@ -83,96 +108,64 @@
     let draggedElement = null;
     let sourceEventKey = "";
 
-    // Auth Logic
+    // Auth
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const u = document.getElementById('username').value;
-      const p = document.getElementById('password').value;
-      const t = document.getElementById('githubToken').value;
-      if (u === CREDENTIALS.username && p === CREDENTIALS.password) {
-        githubConfig.token = t;
-        if(document.getElementById('rememberToken').checked) localStorage.setItem('githubToken', t);
+      if (document.getElementById('username').value === CREDENTIALS.username && document.getElementById('password').value === CREDENTIALS.password) {
+        githubConfig.token = document.getElementById('githubToken').value;
         sessionStorage.setItem('authenticated', 'true');
-        sessionStorage.setItem('githubToken', t);
-        initEditor();
-      } else {
-        document.getElementById('loginError').style.display = 'block';
-      }
+        sessionStorage.setItem('ghToken', githubConfig.token);
+        startEditor();
+      } else { alert('Invalid Login'); }
     });
 
-    function initEditor() {
+    function startEditor() {
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('editorScreen').classList.add('active');
       loadData();
     }
 
     window.onload = () => {
-      const saved = localStorage.getItem('githubToken') || sessionStorage.getItem('githubToken');
-      if (saved && sessionStorage.getItem('authenticated') === 'true') {
-        document.getElementById('githubToken').value = saved;
-        githubConfig.token = saved;
-        initEditor();
+      const token = sessionStorage.getItem('ghToken');
+      if (token && sessionStorage.getItem('authenticated') === 'true') {
+        githubConfig.token = token;
+        startEditor();
       }
     };
 
     function logout() { sessionStorage.clear(); location.reload(); }
-    function setStatus(msg, type='') { const s = document.getElementById('statusBar'); s.textContent = msg; s.className = 'status-bar ' + type; }
+    function setStatus(msg, cls='') { const s = document.getElementById('statusBar'); s.textContent = msg; s.className = 'status-bar ' + cls; }
     function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
-    function escapeHtml(text) { return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function escapeHtml(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-    // Data Management
-async function loadData() {
-  showLoading(true);
-  setStatus('Fetching from GitHub...', 'loading');
-  try {
-    const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.sourceFile}`;
-    const res = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}`, 'Accept': 'application/vnd.github.v3+json' }});
-    if (!res.ok) throw new Error('GitHub access failed');
-    
-    const data = await res.json();
-    const content = new TextDecoder('utf-8').decode(Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0)));
-    
-    parseHTML(content);
-    originalEventsData = JSON.parse(JSON.stringify(eventsData));
-    renderEvents();
-    
-    // Check if we should "Normalize" the file on GitHub to fix the 178 changes issue
-    const needsNormalization = !sessionStorage.getItem('isNormalized');
-    if (needsNormalization) {
-        console.log("Normalizing file format to minimize future diffs...");
-        await silentBaselineSave(); 
-        sessionStorage.setItem('isNormalized', 'true');
+    // Data Parsing
+    async function loadData() {
+      showLoading(true);
+      setStatus('Fetching latest data...', 'loading');
+      try {
+        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.sourceFile}`;
+        const res = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}`, 'Accept': 'application/vnd.github.v3+json' }});
+        const data = await res.json();
+        const content = new TextDecoder('utf-8').decode(Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0)));
+        
+        parseHTML(content);
+        originalEventsData = JSON.parse(JSON.stringify(eventsData));
+        renderEvents();
+
+        // THE FIX: Normalize once per session to eliminate the 170+ change issue
+        if (!sessionStorage.getItem('normalized')) {
+          await normalizeFile();
+          sessionStorage.setItem('normalized', 'true');
+        }
+
+        setStatus(`Loaded ${eventsData.length} events`, 'success');
+      } catch (e) { setStatus('Error loading: ' + e.message, 'error'); }
+      finally { showLoading(false); }
     }
 
-    setStatus(`Loaded ${eventsData.length} events`, 'success');
-  } catch (e) { setStatus('Error: ' + e.message, 'error'); }
-  finally { showLoading(false); }
-}
-
-// This function saves the "Cleaned" version once without prompting you.
-// After this runs once, your future "Save Changes" will only show 1 or 2 lines of diff.
-async function silentBaselineSave() {
-  try {
-    const html = generateHTML();
-    const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.editedFile}`;
-    
-    const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` }});
-    const sha = getRes.ok ? (await getRes.json()).sha : null;
-
-    await fetch(url, {
-      method: 'PUT',
-      headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        message: 'Establishing formatting baseline', 
-        content: btoa(unescape(encodeURIComponent(html))), 
-        sha: sha 
-      })
-    });
-  } catch (e) { console.error("Baseline sync failed", e); }
-}
     function parseHTML(html) {
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      document.getElementById('meetingTitle').textContent = doc.querySelector('.header-text')?.textContent || "Athletics Meeting";
+      document.getElementById('meetingTitle').textContent = doc.querySelector('.header-text')?.textContent || "Starters";
       eventsData = [];
       let currentEvent = null;
       doc.querySelectorAll('table').forEach(table => {
@@ -189,14 +182,14 @@ async function silentBaselineSave() {
     }
 
     function undoChanges() {
-      if (confirm('Discard all unsaved changes?')) {
+      if (confirm('Revert all unsaved changes?')) {
         eventsData = JSON.parse(JSON.stringify(originalEventsData));
         renderEvents();
-        setStatus('Changes reverted', 'success');
+        setStatus('Reverted to last save', 'success');
       }
     }
 
-    // Smart Drag & Drop Logic
+    // Smart Drag and Drop
     function getEventKey(headerText) {
       return headerText.replace(/Final \d+ of \d+/g, '').trim();
     }
@@ -213,9 +206,7 @@ async function silentBaselineSave() {
       if (sourceEventKey === targetKey) {
         this.classList.add('drag-over');
         e.dataTransfer.dropEffect = 'move';
-      } else {
-        e.dataTransfer.dropEffect = 'none';
-      }
+      } else { e.dataTransfer.dropEffect = 'none'; }
     }
 
     function handleDrop(e) {
@@ -228,29 +219,28 @@ async function silentBaselineSave() {
       const tEvtIdx = parseInt(this.dataset.event);
       const tAthIdx = parseInt(this.dataset.athlete);
 
-      const [item] = eventsData[sEvtIdx].athletes.splice(sAthIdx, 1);
-      eventsData[tEvtIdx].athletes.splice(tAthIdx, 0, item);
+      const [movedItem] = eventsData[sEvtIdx].athletes.splice(sAthIdx, 1);
+      eventsData[tEvtIdx].athletes.splice(tAthIdx, 0, movedItem);
 
-      // Re-lane
+      // Clean up lanes
       [sEvtIdx, tEvtIdx].forEach(idx => eventsData[idx].athletes.forEach((a, i) => a.lane = (i + 1).toString()));
       renderEvents();
     }
 
-    // Rendering
     function renderEvents() {
       const container = document.getElementById('eventsContainer');
       container.innerHTML = eventsData.map((evt, eIdx) => `
         <div class="event-card">
-          <div class="event-header"><span>${evt.headerText}</span></div>
+          <div class="event-header"><span>${evt.headerText}</span><span>${evt.athletes.length} Athletes</span></div>
           <table class="event-table">
-            <thead><tr><th>Lane</th><th>No.</th><th>Athlete</th><th>Team</th><th>Action</th></tr></thead>
+            <thead><tr><th>Lane</th><th>No.</th><th>Athlete</th><th>Team</th><th>Delete</th></tr></thead>
             <tbody>${evt.athletes.map((a, aIdx) => `
               <tr class="athlete-row" draggable="true" data-event="${eIdx}" data-athlete="${aIdx}">
                 <td>${a.lane}</td>
                 <td class="editable-cell" onclick="edit(this,${eIdx},${aIdx},'number')">${a.number}</td>
                 <td class="editable-cell" onclick="edit(this,${eIdx},${aIdx},'athlete')">${a.athlete}</td>
                 <td class="editable-cell" onclick="edit(this,${eIdx},${aIdx},'team')">${a.team}</td>
-                <td><button onclick="remove(${eIdx},${aIdx})">❌</button></td>
+                <td style="text-align:center;"><button onclick="removeAth(${eIdx},${aIdx})">❌</button></td>
               </tr>`).join('')}
             </tbody>
           </table>
@@ -261,6 +251,7 @@ async function silentBaselineSave() {
         row.addEventListener('dragover', handleDragOver);
         row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
         row.addEventListener('drop', handleDrop);
+        row.addEventListener('dragend', () => row.classList.remove('dragging'));
       });
     }
 
@@ -274,62 +265,59 @@ async function silentBaselineSave() {
       input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); };
     }
 
-    function remove(eIdx, aIdx) {
-      if(confirm('Remove?')) { eventsData[eIdx].athletes.splice(aIdx, 1); eventsData[eIdx].athletes.forEach((a,i) => a.lane = (i+1).toString()); renderEvents(); }
+    function removeAth(eIdx, aIdx) {
+      if(confirm('Remove athlete?')) { 
+        eventsData[eIdx].athletes.splice(aIdx, 1); 
+        eventsData[eIdx].athletes.forEach((a,i) => a.lane = (i+1).toString()); 
+        renderEvents(); 
+      }
     }
 
-    // Save Logic (Optimized for minimal Git Diff)
-function generateHTML() {
-  const title = document.getElementById('meetingTitle').textContent;
-  const eventsHTML = eventsData.map(evt => {
-    // We add a newline after each <tr> to make the GitHub diff readable (1 line per athlete)
-    const rows = evt.athletes.map(a => 
-      `<tr><td>${a.lane}</td><td>${a.number}</td><td>${a.athlete}</td><td>${a.team}</td></tr>`
-    ).join('\n');
+    // Save logic designed for minimal GitHub Diffs
+    function generateHTML() {
+      const title = document.getElementById('meetingTitle').textContent;
+      const eventsHTML = eventsData.map(evt => {
+        const rows = evt.athletes.map(a => `<tr><td>${a.lane}</td><td>${a.number}</td><td>${a.athlete}</td><td>${a.team}</td></tr>`).join('\n');
+        return `${evt.header}\n<table border="1">\n<tr><td>Lane</td><td>Number</td><td>Athlete</td><td>Team</td></tr>\n${rows}\n</table>`;
+      }).join('\n<BR>\n');
 
-    return `${evt.header}\n<table border="1">\n<tr><td>Lane</td><td>Number</td><td>Athlete</td><td>Team</td></tr>\n${rows}\n</table>`;
-  }).join('\n<BR>\n');
+      return `<html>\n<head>\n<meta charset="UTF-8">\n<title>${escapeHtml(title)}</title>\n<style>\nbody { font-family: Arial; margin: 0; padding: 10px; background: #f4f4f4; }\n.header-text { text-align: center; font-weight: bold; font-size: 22px; color: #1e3a8a; }\ntable { width: 100%; border-collapse: collapse; margin-bottom: 5px; }\n.header-table { border: 2px solid black; background: #eee; font-weight: bold; margin-top: 20px; font-size: 18px; }\ntd { border: 1px solid #999; padding: 4px; }\ntable[border="1"] { font-size: 14px; }\ntable[border="1"] tr:first-child { font-weight: bold; background-color: #e5e7eb; }\n</style>\n</head>\n<body>\n<p class="header-text">${escapeHtml(title)}</p>\n${eventsHTML}\n</body>\n</html>`;
+    }
 
-  return `<html>
-<head>
-<meta charset="UTF-8">
-<title>${escapeHtml(title)}</title>
-<style>
-body { font-family: Arial; margin: 0; padding: 10px; background: #f4f4f4; }
-.header-text { text-align: center; font-weight: bold; font-size: 22px; color: #1e3a8a; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
-.header-table { border: 2px solid black; background: #eee; font-weight: bold; margin-top: 20px; font-size: 18px; }
-td { border: 1px solid #999; padding: 4px; }
-table[border="1"] { font-size: 14px; }
-table[border="1"] tr:first-child { font-weight: bold; background-color: #e5e7eb; }
-</style>
-</head>
-<body>
-<p class="header-text">${escapeHtml(title)}</p>
-${eventsHTML}
-</body>
-</html>`;
-}
+    async function normalizeFile() {
+      try {
+        const html = generateHTML();
+        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.editedFile}`;
+        const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` }});
+        const sha = getRes.ok ? (await getRes.json()).sha : null;
+        await fetch(url, {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Sync Baseline Format', content: btoa(unescape(encodeURIComponent(html))), sha: sha })
+        });
+      } catch (e) { console.warn("Normalization skip"); }
+    }
+
     async function saveChanges() {
-      if (!confirm('Save to GitHub?')) return;
+      if (!confirm('Save changes to GitHub?')) return;
       showLoading(true);
       try {
         const html = generateHTML();
         const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.editedFile}`;
-        
-        // Get existing SHA
         const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` }});
         const sha = getRes.ok ? (await getRes.json()).sha : null;
 
         const res = await fetch(url, {
           method: 'PUT',
           headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Update from Editor', content: btoa(unescape(encodeURIComponent(html))), sha: sha })
+          body: JSON.stringify({ message: 'Update from Tablet Editor', content: btoa(unescape(encodeURIComponent(html))), sha: sha })
         });
 
-        if (res.ok) { setStatus('Saved!', 'success'); originalEventsData = JSON.parse(JSON.stringify(eventsData)); }
-        else throw new Error('Save failed');
-      } catch (e) { setStatus('Error: ' + e.message, 'error'); }
+        if (res.ok) { 
+          setStatus('✅ Saved successfully!', 'success'); 
+          originalEventsData = JSON.parse(JSON.stringify(eventsData)); 
+        } else { throw new Error('Failed to save to GitHub'); }
+      } catch (e) { setStatus('❌ Error: ' + e.message, 'error'); }
       finally { showLoading(false); }
     }
   </script>
