@@ -107,6 +107,12 @@
     let originalEventsData = []; 
     let draggedElement = null;
     let sourceEventKey = "";
+	
+	function toBase64(str) {
+    const bytes = new TextEncoder().encode(str);
+    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join("");
+    return btoa(binString);
+}
 
     // Auth
     document.getElementById('loginForm').addEventListener('submit', (e) => {
@@ -293,7 +299,7 @@
         await fetch(url, {
           method: 'PUT',
           headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Sync Baseline Format', content: btoa(unescape(encodeURIComponent(html))), sha: sha })
+          body: JSON.stringify({ message: 'Sync Baseline Format', content: toBase64(html), sha: sha })
         });
       } catch (e) { console.warn("Normalization skip"); }
     }
@@ -310,7 +316,7 @@
         const res = await fetch(url, {
           method: 'PUT',
           headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Update from Tablet Editor', content: btoa(unescape(encodeURIComponent(html))), sha: sha })
+          body: JSON.stringify({ message: 'Update from Tablet Editor', content: toBase64(html), sha: sha })
         });
 
         if (res.ok) { 
