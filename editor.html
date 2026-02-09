@@ -111,6 +111,17 @@
     /* Editor Screen */
     .editor-screen {
       display: none;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
     }
 
     .header {
@@ -124,6 +135,16 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 15px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .events-container {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 20px;
     }
 
     .header h1 {
@@ -407,14 +428,12 @@
         <div class="input-group">
           <label for="githubToken">GitHub Token</label>
           <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" required>
-        </div>
-        <div class="input-group">
-          <label for="repoOwner">Repository Owner</label>
-          <input type="text" id="repoOwner" placeholder="athletics-info" required>
-        </div>
-        <div class="input-group">
-          <label for="repoName">Repository Name</label>
-          <input type="text" id="repoName" placeholder="athletics-starters" required>
+          <div style="margin-top: 8px;">
+            <label style="display: flex; align-items: center; font-size: 13px; font-weight: normal;">
+              <input type="checkbox" id="rememberToken" style="margin-right: 8px;">
+              Remember my token on this device
+            </label>
+          </div>
         </div>
         <button type="submit" class="btn">Login</button>
       </form>
@@ -476,14 +495,14 @@
 
     // Configuration
     const CREDENTIALS = {
-      username: 'editor',  // Change this
-      password: 'athletics2026'  // Change this to your desired password
+      username: 'editor',
+      password: 'athletics2026'
     };
 
     let githubConfig = {
       token: '',
-      owner: '',
-      repo: '',
+      owner: 'Athletics-info',  // Hardcoded
+      repo: 'athletics-starters',  // Hardcoded
       sourceFile: 'Starters.html',
       editedFile: 'Starters-Edited.html'
     };
@@ -493,28 +512,40 @@
     let draggedEventIndex = null;
     let draggedAthleteIndex = null;
 
+    // Load saved token on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedToken = localStorage.getItem('githubToken');
+      if (savedToken) {
+        document.getElementById('githubToken').value = savedToken;
+        document.getElementById('rememberToken').checked = true;
+      }
+    });
+
     // Login handling
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       const token = document.getElementById('githubToken').value;
-      const owner = document.getElementById('repoOwner').value;
-      const repo = document.getElementById('repoName').value;
+      const rememberToken = document.getElementById('rememberToken').checked;
 
       if (username === CREDENTIALS.username && password === CREDENTIALS.password) {
         githubConfig.token = token;
-        githubConfig.owner = owner;
-        githubConfig.repo = repo;
+        // owner and repo already hardcoded in githubConfig
+
+        // Save token to localStorage if checkbox is checked
+        if (rememberToken) {
+          localStorage.setItem('githubToken', token);
+        } else {
+          localStorage.removeItem('githubToken');
+        }
 
         // Save to sessionStorage
         sessionStorage.setItem('githubToken', token);
-        sessionStorage.setItem('repoOwner', owner);
-        sessionStorage.setItem('repoName', repo);
         sessionStorage.setItem('authenticated', 'true');
 
         document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('editorScreen').style.display = 'block';
+        document.getElementById('editorScreen').style.display = 'flex';
         loadData();
       } else {
         document.getElementById('loginError').style.display = 'block';
@@ -525,16 +556,13 @@
     window.addEventListener('load', () => {
       const authenticated = sessionStorage.getItem('authenticated');
       const token = sessionStorage.getItem('githubToken');
-      const owner = sessionStorage.getItem('repoOwner');
-      const repo = sessionStorage.getItem('repoName');
       
-      if (authenticated === 'true' && token && owner && repo) {
+      if (authenticated === 'true' && token) {
         githubConfig.token = token;
-        githubConfig.owner = owner;
-        githubConfig.repo = repo;
+        // owner and repo already hardcoded
 
         document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('editorScreen').style.display = 'block';
+        document.getElementById('editorScreen').style.display = 'flex';
         loadData();
       }
     });
@@ -928,10 +956,7 @@ function generateHTML() {
   
   let eventsHTML = eventsData.map(event => {
     const athletesRows = event.athletes.map(athlete => 
-      `<tr><td>${athlete.lane}</td>` +
-      `<td>${escapeHtml(athlete.number.toUpperCase())}</td>` +
-      `<td>${escapeHtml(athlete.athlete.toUpperCase())}</td>` +
-      `<td>${escapeHtml(athlete.team.toUpperCase())}</td></tr>`
+      `<tr><td>${athlete.lane}</td><td>${athlete.number}</td><td>${athlete.athlete}</td><td>${athlete.team}</td></tr>`
     ).join('\n');
 
     return `${event.header}
@@ -941,8 +966,7 @@ ${athletesRows}
 </table>`;
   }).join('<BR>\n');
 
-  return `<!DOCTYPE html>
-<html lang="en">
+  return `<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
