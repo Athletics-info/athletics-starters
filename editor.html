@@ -108,13 +108,13 @@
       display: none;
     }
 
-    /* Editor Screen  
+    /* Editor Screen */
     .editor-screen {
-      display: none;  Hidden by default, shown via JavaScript  
+      display: none; /* Hidden by default, shown via JavaScript */
       height: 100vh;
       overflow: hidden;
       flex-direction: column;
-    }*/
+    }
 
     .editor-screen.active {
       display: flex;
@@ -692,8 +692,12 @@ const content = fromBase64UTF8(data.content);
       eventsData = [];
       const tables = doc.querySelectorAll('table');
       
+      console.log('Total tables found:', tables.length);
+      
       let currentEvent = null;
-      tables.forEach(table => {
+      tables.forEach((table, index) => {
+        console.log('Table', index, '- has header-table class:', table.classList.contains('header-table'), '- has border:', table.hasAttribute('border'));
+        
         if (table.classList.contains('header-table')) {
           // This is an event header
           const headerText = table.textContent.trim();
@@ -703,9 +707,11 @@ const content = fromBase64UTF8(data.content);
             athletes: []
           };
           eventsData.push(currentEvent);
+          console.log('Created event:', headerText);
         } else if (currentEvent && table.hasAttribute('border')) {
           // This is an athletes table
           const rows = Array.from(table.querySelectorAll('tr')).slice(1); // Skip header row
+          console.log('Found', rows.length, 'athlete rows');
           rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             if (cells.length >= 3) {
@@ -719,13 +725,21 @@ const content = fromBase64UTF8(data.content);
           });
         }
       });
+      
+      console.log('Total events parsed:', eventsData.length);
+      console.log('Events with athletes:', eventsData.filter(e => e.athletes.length > 0).length);
     }
 
     function renderEvents() {
       const container = document.getElementById('eventsContainer');
+      console.log('renderEvents called - container:', container);
+      console.log('eventsData length:', eventsData.length);
+      
       container.innerHTML = '';
 
       eventsData.forEach((event, eventIndex) => {
+        console.log('Rendering event', eventIndex, ':', event.headerText, '- athletes:', event.athletes.length);
+        
         const eventCard = document.createElement('div');
         eventCard.className = 'event-card';
         eventCard.innerHTML = `
@@ -752,6 +766,8 @@ const content = fromBase64UTF8(data.content);
         container.appendChild(eventCard);
       });
 
+      console.log('Rendered', container.children.length, 'event cards');
+      
       // Attach drag event listeners
       attachDragListeners();
     }
@@ -987,7 +1003,6 @@ ${eventsHTML}
 </body>
 </html>`;
 }
-
   </script>
 </body>
 </html>
