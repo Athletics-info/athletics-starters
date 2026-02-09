@@ -17,7 +17,8 @@
     .btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
     .editor-screen { display: none; flex-direction: column; }
     .editor-screen.active { display: flex; }
-    .header { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+   /* .header { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }*/
+	.header {  background: white;  padding: 20px;  border-radius: 12px;  box-shadow: 0 4px 12px rgba(0,0,0,0.1);  margin-bottom: 20px;  display: flex;  justify-content: space-between;  align-items: center;  /* Frozen/Sticky Logic */  position: sticky;   top: 0;   z-index: 1000; }
     .header-actions { display: flex; gap: 10px; }
     .btn-secondary { padding: 10px 20px; background: #f5f5f5; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; }
     .btn-primary { padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; }
@@ -120,24 +121,55 @@
     function escapeHtml(text) { return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
     // Data Management
-    async function loadData() {
-      showLoading(true);
-      setStatus('Fetching from GitHub...', 'loading');
-      try {
-        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.sourceFile}`;
-        const res = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}`, 'Accept': 'application/vnd.github.v3+json' }});
-        if (!res.ok) throw new Error('GitHub access failed');
-        const data = await res.json();
-        const content = new TextDecoder('utf-8').decode(Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0)));
-        
-        parseHTML(content);
-        originalEventsData = JSON.parse(JSON.stringify(eventsData)); // Backup for Undo
-        renderEvents();
-        setStatus(`Loaded ${eventsData.length} events`, 'success');
-      } catch (e) { setStatus('Error: ' + e.message, 'error'); }
-      finally { showLoading(false); }
+async function loadData() {
+  showLoading(true);
+  setStatus('Fetching from GitHub...', 'loading');
+  try {
+    const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.sourceFile}`;
+    const res = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}`, 'Accept': 'application/vnd.github.v3+json' }});
+    if (!res.ok) throw new Error('GitHub access failed');
+    
+    const data = await res.json();
+    const content = new TextDecoder('utf-8').decode(Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0)));
+    
+    parseHTML(content);
+    originalEventsData = JSON.parse(JSON.stringify(eventsData));
+    renderEvents();
+    
+    // Check if we should "Normalize" the file on GitHub to fix the 178 changes issue
+    const needsNormalization = !sessionStorage.getItem('isNormalized');
+    if (needsNormalization) {
+        console.log("Normalizing file format to minimize future diffs...");
+        await silentBaselineSave(); 
+        sessionStorage.setItem('isNormalized', 'true');
     }
 
+    setStatus(`Loaded ${eventsData.length} events`, 'success');
+  } catch (e) { setStatus('Error: ' + e.message, 'error'); }
+  finally { showLoading(false); }
+}
+
+// This function saves the "Cleaned" version once without prompting you.
+// After this runs once, your future "Save Changes" will only show 1 or 2 lines of diff.
+async function silentBaselineSave() {
+  try {
+    const html = generateHTML();
+    const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.editedFile}`;
+    
+    const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` }});
+    const sha = getRes.ok ? (await getRes.json()).sha : null;
+
+    await fetch(url, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        message: 'Establishing formatting baseline', 
+        content: btoa(unescape(encodeURIComponent(html))), 
+        sha: sha 
+      })
+    });
+  } catch (e) { console.error("Baseline sync failed", e); }
+}
     function parseHTML(html) {
       const doc = new DOMParser().parseFromString(html, 'text/html');
       document.getElementById('meetingTitle').textContent = doc.querySelector('.header-text')?.textContent || "Athletics Meeting";
@@ -247,16 +279,37 @@
     }
 
     // Save Logic (Optimized for minimal Git Diff)
-    function generateHTML() {
-      const title = document.getElementById('meetingTitle').textContent;
-      const eventsHTML = eventsData.map(evt => {
-        const rows = evt.athletes.map(a => `<tr><td>${a.lane}</td><td>${a.number}</td><td>${a.athlete}</td><td>${a.team}</td></tr>`).join('');
-        return `${evt.header}<table border="1"><tr><td>Lane</td><td>Number</td><td>Athlete</td><td>Team</td></tr>${rows}</table>`;
-      }).join('<BR>');
+function generateHTML() {
+  const title = document.getElementById('meetingTitle').textContent;
+  const eventsHTML = eventsData.map(evt => {
+    // We add a newline after each <tr> to make the GitHub diff readable (1 line per athlete)
+    const rows = evt.athletes.map(a => 
+      `<tr><td>${a.lane}</td><td>${a.number}</td><td>${a.athlete}</td><td>${a.team}</td></tr>`
+    ).join('\n');
 
-      return `<html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: Arial; margin: 0; padding: 10px; background: #f4f4f4; } .header-text { text-align: center; font-weight: bold; font-size: 22px; color: #1e3a8a; } table { width: 100%; border-collapse: collapse; margin-bottom: 5px; } .header-table { border: 2px solid black; background: #eee; font-weight: bold; margin-top: 20px; font-size: 18px; } td { border: 1px solid #999; padding: 4px; } table[border="1"] { font-size: 14px; } table[border="1"] tr:first-child { font-weight: bold; background-color: #e5e7eb; }</style></head><body><p class="header-text">${escapeHtml(title)}</p>${eventsHTML}</body></html>`;
-    }
+    return `${evt.header}\n<table border="1">\n<tr><td>Lane</td><td>Number</td><td>Athlete</td><td>Team</td></tr>\n${rows}\n</table>`;
+  }).join('\n<BR>\n');
 
+  return `<html>
+<head>
+<meta charset="UTF-8">
+<title>${escapeHtml(title)}</title>
+<style>
+body { font-family: Arial; margin: 0; padding: 10px; background: #f4f4f4; }
+.header-text { text-align: center; font-weight: bold; font-size: 22px; color: #1e3a8a; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+.header-table { border: 2px solid black; background: #eee; font-weight: bold; margin-top: 20px; font-size: 18px; }
+td { border: 1px solid #999; padding: 4px; }
+table[border="1"] { font-size: 14px; }
+table[border="1"] tr:first-child { font-weight: bold; background-color: #e5e7eb; }
+</style>
+</head>
+<body>
+<p class="header-text">${escapeHtml(title)}</p>
+${eventsHTML}
+</body>
+</html>`;
+}
     async function saveChanges() {
       if (!confirm('Save to GitHub?')) return;
       showLoading(true);
