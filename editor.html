@@ -3,328 +3,801 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Starters Editor</title>
+  <title>CSV Starters Editor</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
-    .container { max-width: 1200px; margin: 0 auto; }
 
     /* Login Screen */
-    .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .login-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
-    .input-group { margin-bottom: 20px; }
-    .input-group label { display: block; margin-bottom: 8px; font-weight: 500; }
-    .input-group input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; }
-    .btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 380px;
+    }
+    
+    .login-box h1 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #333;
+    }
+    
+    .input-group {
+      margin-bottom: 15px;
+    }
+    
+    .input-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      color: #555;
+    }
+    
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .checkbox-group label {
+      font-size: 12px;
+      color: #666;
+      margin: 0;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+    }
 
     /* Editor Screen */
-    .editor-screen { display: none; }
-    .editor-screen.active { display: block; }
+    .editor-screen {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+    
+    .editor-screen.active {
+      display: flex;
+    }
 
-    .header {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+    /* Top Header */
+    .top-header {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      /* Sticky/Frozen Header Logic */
-      position: sticky;
-      top: 10px;
-      z-index: 1000;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .top-header h1 {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .header-btn {
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .header-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .header-btn.logout {
+      background: rgba(220,38,38,0.8);
+    }
+    
+    .header-btn.logout:hover {
+      background: rgba(220,38,38,1);
     }
 
-    .header-actions { display: flex; gap: 10px; }
-    .btn-secondary { padding: 10px 20px; background: #f5f5f5; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .btn-primary { padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    /* Status Bar */
+    .status-bar {
+      background: white;
+      padding: 10px 20px;
+      font-size: 13px;
+      color: #666;
+      border-bottom: 1px solid #e0e0e0;
+      flex-shrink: 0;
+    }
+    
+    .status-bar.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-bar.loading {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-bar.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
 
-    .status-bar { background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; }
-    .status-bar.success { background: #d4edda; color: #155724; }
-    .status-bar.loading { background: #fff3cd; color: #856404; }
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
 
-    .event-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 30px; }
-    .event-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; font-weight: 600; display: flex; justify-content: space-between; }
-    .event-table { width: 100%; border-collapse: collapse; }
-    .event-table th { padding: 12px; text-align: left; background: #f8f9fa; border-bottom: 2px solid #e0e0e0; color: #666; font-size: 13px; }
-    .event-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+    /* Event Cards */
+    .event-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    
+    .event-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .event-meta {
+      font-size: 12px;
+      opacity: 0.9;
+    }
 
-    /* Drag and Drop Visuals */
-    .athlete-row { cursor: move; }
-    .athlete-row.dragging { opacity: 0.4; background: #e3f2fd; }
-    .athlete-row.drag-over { border-top: 3px solid #667eea; }
+    /* Table */
+    .event-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .event-table thead tr {
+      background: #f8f9fa;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .event-table th {
+      padding: 10px 12px;
+      text-align: left;
+      color: #666;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .event-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+    
+    .athlete-row {
+      cursor: move;
+    }
+    
+    .athlete-row:hover {
+      background: #f9fafb;
+    }
+    
+    .athlete-row.dragging {
+      opacity: 0.4;
+      background: #e3f2fd;
+    }
+    
+    .athlete-row.drag-over {
+      border-top: 3px solid #667eea;
+    }
+    
+    .editable-cell {
+      cursor: text;
+      min-width: 60px;
+    }
+    
+    .editable-cell:hover {
+      background: #fff9c4;
+    }
+    
+    .editable-cell input {
+      width: 100%;
+      padding: 4px 6px;
+      border: 2px solid #667eea;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    
+    .btn-remove {
+      padding: 4px 10px;
+      background: #fee;
+      color: #c33;
+      border: 1px solid #fcc;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .btn-remove:hover {
+      background: #fcc;
+    }
+    
+    .btn-add {
+      width: 100%;
+      padding: 10px;
+      background: #f0f9ff;
+      color: #0369a1;
+      border: 2px dashed #0ea5e9;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    
+    .btn-add:hover {
+      background: #e0f2fe;
+    }
 
-    .editable-cell { cursor: text; min-width: 50px; }
-    .editable-cell:hover { background: #fff9c4; }
-    .editable-cell input { width: 100%; padding: 4px; border: 1px solid #667eea; }
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
 
-    .loading-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 2000; color: white; }
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .top-header h1 {
+        font-size: 16px;
+      }
+      
+      .header-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+      
+      .event-table {
+        font-size: 11px;
+      }
+      
+      .event-table th,
+      .event-table td {
+        padding: 8px 6px;
+      }
+    }
   </style>
 </head>
 <body>
-
+  <!-- Login Screen -->
   <div class="login-screen" id="loginScreen">
     <div class="login-box">
-      <h1>🏃‍♂️ Starters Editor</h1>
+      <h1>🏃‍♂️ CSV Editor</h1>
+      <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Login to edit starters</p>
+      
       <form id="loginForm">
-        <div class="input-group"><label>Username</label><input type="text" id="username" value="editor" required></div>
-        <div class="input-group"><label>Password</label><input type="password" id="password" required></div>
-        <div class="input-group"><label>GitHub Token</label><input type="password" id="githubToken" required></div>
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" id="username" value="editor" required>
+        </div>
+        
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="password" required>
+        </div>
+        
+        <div class="input-group">
+          <label>GitHub Token</label>
+          <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" required>
+          <div class="checkbox-group">
+            <input type="checkbox" id="rememberToken">
+            <label for="rememberToken">Remember token on this device</label>
+          </div>
+        </div>
+        
         <button type="submit" class="btn">Login</button>
       </form>
     </div>
   </div>
 
+  <!-- Editor Screen -->
   <div class="editor-screen" id="editorScreen">
-    <div class="container">
-      <div class="header">
-        <h1 id="meetingTitle">Loading...</h1>
-        <div class="header-actions">
-          <button class="btn-secondary" onclick="undoChanges()">↩️ Undo Changes</button>
-          <button class="btn-secondary" onclick="loadData()">🔄 Refresh</button>
-          <button class="btn-primary" onclick="saveChanges()">💾 Save Changes</button>
-          <button class="btn-secondary" onclick="logout()">🚪 Logout</button>
+    <!-- Top Header -->
+    <div class="top-header">
+      <h1 id="meetingTitle">🏃‍♂️ CSV Starters Editor</h1>
+      <div class="header-actions">
+        <button class="header-btn" onclick="loadData()">🔄 Refresh</button>
+        <button class="header-btn" onclick="saveAllChanges()">💾 Save All</button>
+        <button class="header-btn logout" onclick="logout()">🚪 Logout</button>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="statusBar">Ready to edit</div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="container">
+        <div id="eventsContainer">
+          <!-- Events will be loaded here -->
         </div>
       </div>
-      <div class="status-bar" id="statusBar">Ready</div>
-      <div id="eventsContainer"></div>
     </div>
   </div>
 
-  <div class="loading-overlay" id="loadingOverlay"><h2>Syncing with GitHub...</h2></div>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div>⏳ Loading CSV files...</div>
+  </div>
 
   <script>
-    const CREDENTIALS = { username: 'editor', password: 'athletics2026' };
-    let githubConfig = { token: '', owner: 'Athletics-info', repo: 'athletics-starters', sourceFile: 'Starters.html', editedFile: 'Starters-Edited.html' };
-    
-    let eventsData = [];
-    let originalEventsData = []; 
-    let draggedElement = null;
-    let sourceEventKey = "";
-	
-	function toBase64(str) {
-    const bytes = new TextEncoder().encode(str);
-    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join("");
-    return btoa(binString);
-}
-
-    // Auth
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (document.getElementById('username').value === CREDENTIALS.username && document.getElementById('password').value === CREDENTIALS.password) {
-        githubConfig.token = document.getElementById('githubToken').value;
-        sessionStorage.setItem('authenticated', 'true');
-        sessionStorage.setItem('ghToken', githubConfig.token);
-        startEditor();
-      } else { alert('Invalid Login'); }
-    });
-
-    function startEditor() {
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('editorScreen').classList.add('active');
-      loadData();
-    }
-
-    window.onload = () => {
-      const token = sessionStorage.getItem('ghToken');
-      if (token && sessionStorage.getItem('authenticated') === 'true') {
-        githubConfig.token = token;
-        startEditor();
-      }
+    // Configuration
+    const CREDENTIALS = {
+      username: 'editor',
+      password: 'athletics2026'
     };
 
-    function logout() { sessionStorage.clear(); location.reload(); }
-    function setStatus(msg, cls='') { const s = document.getElementById('statusBar'); s.textContent = msg; s.className = 'status-bar ' + cls; }
-    function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
-    function escapeHtml(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    let githubConfig = {
+      token: '',
+      owner: 'Athletics-info',
+      repo: 'athletics-starters',
+      csvFolder: '' // We'll list files in root for now
+    };
 
-    // Data Parsing
+    let eventsData = [];
+    let draggedElement = null;
+    let draggedEventIndex = null;
+    let draggedAthleteIndex = null;
+
+    // Load saved token
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedToken = localStorage.getItem('githubToken');
+      if (savedToken) {
+        document.getElementById('githubToken').value = savedToken;
+        document.getElementById('rememberToken').checked = true;
+      }
+    });
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const token = document.getElementById('githubToken').value;
+      const rememberToken = document.getElementById('rememberToken').checked;
+
+      if (username === CREDENTIALS.username && password === CREDENTIALS.password) {
+        githubConfig.token = token;
+
+        if (rememberToken) {
+          localStorage.setItem('githubToken', token);
+        } else {
+          localStorage.removeItem('githubToken');
+        }
+
+        sessionStorage.setItem('authenticated', 'true');
+
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('editorScreen').classList.add('active');
+        loadData();
+      } else {
+        alert('Invalid credentials');
+      }
+    });
+
+    // Check if logged in
+    window.addEventListener('load', () => {
+      if (sessionStorage.getItem('authenticated') === 'true') {
+        const savedToken = localStorage.getItem('githubToken');
+        if (savedToken) {
+          githubConfig.token = savedToken;
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('editorScreen').classList.add('active');
+          loadData();
+        }
+      }
+    });
+
+    function logout() {
+      sessionStorage.clear();
+      location.reload();
+    }
+
+    function showLoading(show) {
+      document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function setStatus(message, type = '') {
+      const statusBar = document.getElementById('statusBar');
+      statusBar.textContent = message;
+      statusBar.className = 'status-bar ' + type;
+    }
+
     async function loadData() {
       showLoading(true);
-      setStatus('Fetching latest data...', 'loading');
+      setStatus('Loading CSV files from GitHub...', 'loading');
+
       try {
-        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.sourceFile}`;
-        const res = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}`, 'Accept': 'application/vnd.github.v3+json' }});
-        const data = await res.json();
-        const content = new TextDecoder('utf-8').decode(Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0)));
+        // Get list of files in repo
+        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/`;
         
-        parseHTML(content);
-        originalEventsData = JSON.parse(JSON.stringify(eventsData));
-        renderEvents();
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `token ${githubConfig.token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
 
-        // THE FIX: Normalize once per session to eliminate the 170+ change issue
-        if (!sessionStorage.getItem('normalized')) {
-          await normalizeFile();
-          sessionStorage.setItem('normalized', 'true');
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+
+        const files = await response.json();
+        const csvFiles = files.filter(f => f.name.endsWith('.csv') && f.name.startsWith('Starters_'));
+        
+        // Load each CSV file
+        eventsData = [];
+        for (const file of csvFiles.sort((a, b) => a.name.localeCompare(b.name))) {
+          const fileResponse = await fetch(file.download_url);
+          const content = await fileResponse.text();
+          const event = parseCSV(content, file.name);
+          if (event) {
+            eventsData.push(event);
+          }
         }
-
-        setStatus(`Loaded ${eventsData.length} events`, 'success');
-      } catch (e) { setStatus('Error loading: ' + e.message, 'error'); }
-      finally { showLoading(false); }
-    }
-
-    function parseHTML(html) {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      document.getElementById('meetingTitle').textContent = doc.querySelector('.header-text')?.textContent || "Starters";
-      eventsData = [];
-      let currentEvent = null;
-      doc.querySelectorAll('table').forEach(table => {
-        if (table.classList.contains('header-table')) {
-          currentEvent = { header: table.outerHTML, headerText: table.textContent.trim(), athletes: [] };
-          eventsData.push(currentEvent);
-        } else if (currentEvent && table.hasAttribute('border')) {
-          Array.from(table.querySelectorAll('tr')).slice(1).forEach(row => {
-            const c = row.querySelectorAll('td');
-            if (c.length >= 3) currentEvent.athletes.push({ lane: c[0].textContent.trim(), number: c[1].textContent.trim(), athlete: c[2].textContent.trim(), team: c[3]?.textContent.trim() || '' });
-          });
-        }
-      });
-    }
-
-    function undoChanges() {
-      if (confirm('Revert all unsaved changes?')) {
-        eventsData = JSON.parse(JSON.stringify(originalEventsData));
+        
         renderEvents();
-        setStatus('Reverted to last save', 'success');
+        setStatus(`✅ Loaded ${eventsData.length} events from ${csvFiles.length} CSV files`, 'success');
+      } catch (error) {
+        setStatus('❌ Error: ' + error.message, 'error');
+      } finally {
+        showLoading(false);
       }
     }
 
-    // Smart Drag and Drop
-    function getEventKey(headerText) {
-      return headerText.replace(/Final \d+ of \d+/g, '').trim();
+    function parseCSV(content, fileName) {
+      const lines = content.split('\n').map(l => l.trim()).filter(l => l);
+      
+      if (lines.length < 4) return null;
+      
+      // Parse metadata (line 2)
+      const metaParts = parseCSVLine(lines[1]);
+      const seq = parseInt(metaParts[0]);
+      const item = metaParts[1];
+      const gender = metaParts[2];
+      const age = metaParts[3];
+      const round = metaParts[4];
+      const heat = metaParts[5];
+      const time = metaParts[6];
+      
+      // Build header text
+      const headerText = `${seq} ${time}  ${round === 'F' ? 'Final' : `Heat ${heat}`} ${gender} ${age} ${item}`;
+      
+      // Parse athletes (line 4+)
+      const athletes = [];
+      for (let i = 3; i < lines.length; i++) {
+        if (lines[i].toLowerCase().includes('no data')) continue;
+        
+        const parts = parseCSVLine(lines[i]);
+        if (parts.length >= 5) {
+          athletes.push({
+            lane: parts[0],
+            number: parts[3],
+            athlete: `${parts[1]} ${parts[2]}`.trim(),
+            team: parts[4]
+          });
+        }
+      }
+      
+      return {
+        fileName: fileName,
+        seq: seq,
+        item: item,
+        gender: gender,
+        age: age,
+        round: round,
+        heat: heat,
+        time: time,
+        headerText: headerText,
+        athletes: athletes
+      };
     }
 
-    function handleDragStart(e) {
-      draggedElement = this;
-      sourceEventKey = getEventKey(eventsData[this.dataset.event].headerText);
-      this.classList.add('dragging');
-    }
-
-    function handleDragOver(e) {
-      e.preventDefault();
-      const targetKey = getEventKey(eventsData[this.dataset.event].headerText);
-      if (sourceEventKey === targetKey) {
-        this.classList.add('drag-over');
-        e.dataTransfer.dropEffect = 'move';
-      } else { e.dataTransfer.dropEffect = 'none'; }
-    }
-
-    function handleDrop(e) {
-      e.stopPropagation();
-      const targetKey = getEventKey(eventsData[this.dataset.event].headerText);
-      if (sourceEventKey !== targetKey) return;
-
-      const sEvtIdx = parseInt(draggedElement.dataset.event);
-      const sAthIdx = parseInt(draggedElement.dataset.athlete);
-      const tEvtIdx = parseInt(this.dataset.event);
-      const tAthIdx = parseInt(this.dataset.athlete);
-
-      const [movedItem] = eventsData[sEvtIdx].athletes.splice(sAthIdx, 1);
-      eventsData[tEvtIdx].athletes.splice(tAthIdx, 0, movedItem);
-
-      // Clean up lanes
-      [sEvtIdx, tEvtIdx].forEach(idx => eventsData[idx].athletes.forEach((a, i) => a.lane = (i + 1).toString()));
-      renderEvents();
+    function parseCSVLine(line) {
+      // Simple CSV parser that handles quoted fields
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      
+      return result;
     }
 
     function renderEvents() {
       const container = document.getElementById('eventsContainer');
-      container.innerHTML = eventsData.map((evt, eIdx) => `
-        <div class="event-card">
-          <div class="event-header"><span>${evt.headerText}</span><span>${evt.athletes.length} Athletes</span></div>
-          <table class="event-table">
-            <thead><tr><th>Lane</th><th>No.</th><th>Athlete</th><th>Team</th><th>Delete</th></tr></thead>
-            <tbody>${evt.athletes.map((a, aIdx) => `
-              <tr class="athlete-row" draggable="true" data-event="${eIdx}" data-athlete="${aIdx}">
-                <td>${a.lane}</td>
-                <td class="editable-cell" onclick="edit(this,${eIdx},${aIdx},'number')">${a.number}</td>
-                <td class="editable-cell" onclick="edit(this,${eIdx},${aIdx},'athlete')">${a.athlete}</td>
-                <td class="editable-cell" onclick="edit(this,${eIdx},${aIdx},'team')">${a.team}</td>
-                <td style="text-align:center;"><button onclick="removeAth(${eIdx},${aIdx})">❌</button></td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>`).join('');
+      container.innerHTML = '';
 
-      document.querySelectorAll('.athlete-row').forEach(row => {
-        row.addEventListener('dragstart', handleDragStart);
-        row.addEventListener('dragover', handleDragOver);
-        row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
-        row.addEventListener('drop', handleDrop);
-        row.addEventListener('dragend', () => row.classList.remove('dragging'));
+      eventsData.forEach((event, eventIndex) => {
+        const card = document.createElement('div');
+        card.className = 'event-card';
+        
+        const rows = event.athletes.map((a, i) => renderAthleteRow(a, eventIndex, i)).join('');
+        
+        card.innerHTML = `
+          <div class="event-header">
+            <span>${event.headerText}</span>
+            <span class="event-meta">${event.athletes.length} athletes | ${event.fileName}</span>
+          </div>
+          <table class="event-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">Lane</th>
+                <th style="width: 80px;">Number</th>
+                <th>Athlete</th>
+                <th>Team</th>
+                <th style="width: 80px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="event-${eventIndex}">${rows}</tbody>
+          </table>
+          <button class="btn-add" onclick="addAthlete(${eventIndex})">+ Add Athlete</button>
+        `;
+        
+        container.appendChild(card);
+      });
+
+      attachDragListeners();
+    }
+
+    function renderAthleteRow(athlete, eventIndex, athleteIndex) {
+      return `
+        <tr class="athlete-row" draggable="true" data-event="${eventIndex}" data-athlete="${athleteIndex}">
+          <td class="editable-cell" onclick="editCell(this, ${eventIndex}, ${athleteIndex}, 'lane')">${athlete.lane}</td>
+          <td class="editable-cell" onclick="editCell(this, ${eventIndex}, ${athleteIndex}, 'number')">${athlete.number}</td>
+          <td class="editable-cell" onclick="editCell(this, ${eventIndex}, ${athleteIndex}, 'athlete')">${athlete.athlete}</td>
+          <td class="editable-cell" onclick="editCell(this, ${eventIndex}, ${athleteIndex}, 'team')">${athlete.team}</td>
+          <td><button class="btn-remove" onclick="removeAthlete(${eventIndex}, ${athleteIndex})">Remove</button></td>
+        </tr>
+      `;
+    }
+
+    function editCell(cell, eventIndex, athleteIndex, field) {
+      if (cell.querySelector('input')) return;
+
+      const current = eventsData[eventIndex].athletes[athleteIndex][field];
+      cell.innerHTML = `<input type="text" value="${current}" autofocus>`;
+      const input = cell.querySelector('input');
+      
+      input.focus();
+      input.select();
+
+      const save = () => {
+        eventsData[eventIndex].athletes[athleteIndex][field] = input.value;
+        cell.textContent = input.value;
+      };
+
+      input.addEventListener('blur', save);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') save();
+        else if (e.key === 'Escape') cell.textContent = current;
       });
     }
 
-    function edit(cell, eIdx, aIdx, field) {
-      if (cell.querySelector('input')) return;
-      const old = cell.textContent;
-      cell.innerHTML = `<input type="text" value="${old}">`;
-      const input = cell.querySelector('input');
-      input.focus();
-      input.onblur = () => { eventsData[eIdx].athletes[aIdx][field] = input.value; cell.textContent = input.value; };
-      input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); };
+    function addAthlete(eventIndex) {
+      eventsData[eventIndex].athletes.push({
+        lane: (eventsData[eventIndex].athletes.length + 1).toString(),
+        number: '',
+        athlete: 'New Athlete',
+        team: ''
+      });
+      renderEvents();
     }
 
-    function removeAth(eIdx, aIdx) {
-      if(confirm('Remove athlete?')) { 
-        eventsData[eIdx].athletes.splice(aIdx, 1); 
-        eventsData[eIdx].athletes.forEach((a,i) => a.lane = (i+1).toString()); 
-        renderEvents(); 
+    function removeAthlete(eventIndex, athleteIndex) {
+      if (confirm('Remove this athlete?')) {
+        eventsData[eventIndex].athletes.splice(athleteIndex, 1);
+        eventsData[eventIndex].athletes.forEach((a, i) => a.lane = (i + 1).toString());
+        renderEvents();
       }
     }
 
-    // Save logic designed for minimal GitHub Diffs
-    function generateHTML() {
-      const title = document.getElementById('meetingTitle').textContent;
-      const eventsHTML = eventsData.map(evt => {
-        const rows = evt.athletes.map(a => `<tr><td>${a.lane}</td><td>${a.number}</td><td>${a.athlete}</td><td>${a.team}</td></tr>`).join('\n');
-        return `${evt.header}\n<table border="1">\n<tr><td>Lane</td><td>Number</td><td>Athlete</td><td>Team</td></tr>\n${rows}\n</table>`;
-      }).join('\n<BR>\n');
-
-      return `<html>\n<head>\n<meta charset="UTF-8">\n<title>${escapeHtml(title)}</title>\n<style>\nbody { font-family: Arial; margin: 0; padding: 10px; background: #f4f4f4; }\n.header-text { text-align: center; font-weight: bold; font-size: 22px; color: #1e3a8a; }\ntable { width: 100%; border-collapse: collapse; margin-bottom: 5px; }\n.header-table { border: 2px solid black; background: #eee; font-weight: bold; margin-top: 20px; font-size: 18px; }\ntd { border: 1px solid #999; padding: 4px; }\ntable[border="1"] { font-size: 14px; }\ntable[border="1"] tr:first-child { font-weight: bold; background-color: #e5e7eb; }\n</style>\n</head>\n<body>\n<p class="header-text">${escapeHtml(title)}</p>\n${eventsHTML}\n</body>\n</html>`;
-    }
-
-    async function normalizeFile() {
-      try {
-        const html = generateHTML();
-        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.editedFile}`;
-        const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` }});
-        const sha = getRes.ok ? (await getRes.json()).sha : null;
-        await fetch(url, {
-          method: 'PUT',
-          headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Sync Baseline Format', content: toBase64(html), sha: sha })
+    // Drag and Drop
+    function attachDragListeners() {
+      document.querySelectorAll('.athlete-row').forEach(row => {
+        row.addEventListener('dragstart', handleDragStart);
+        row.addEventListener('dragover', handleDragOver);
+        row.addEventListener('drop', handleDrop);
+        row.addEventListener('dragleave', e => e.currentTarget.classList.remove('drag-over'));
+        row.addEventListener('dragend', e => {
+          document.querySelectorAll('.athlete-row').forEach(r => {
+            r.classList.remove('dragging', 'drag-over');
+          });
         });
-      } catch (e) { console.warn("Normalization skip"); }
+      });
     }
 
-    async function saveChanges() {
-      if (!confirm('Save changes to GitHub?')) return;
+    function handleDragStart(e) {
+      draggedElement = e.currentTarget;
+      draggedEventIndex = parseInt(e.currentTarget.dataset.event);
+      draggedAthleteIndex = parseInt(e.currentTarget.dataset.athlete);
+      e.currentTarget.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.stopPropagation();
+      const targetEventIndex = parseInt(e.currentTarget.dataset.event);
+      const targetAthleteIndex = parseInt(e.currentTarget.dataset.athlete);
+
+      if (draggedEventIndex !== targetEventIndex) return;
+
+      const [moved] = eventsData[draggedEventIndex].athletes.splice(draggedAthleteIndex, 1);
+      eventsData[targetEventIndex].athletes.splice(targetAthleteIndex, 0, moved);
+      eventsData[targetEventIndex].athletes.forEach((a, i) => a.lane = (i + 1).toString());
+      
+      renderEvents();
+    }
+
+    async function saveAllChanges() {
+      if (!confirm(`Save all ${eventsData.length} CSV files to GitHub?`)) return;
+
       showLoading(true);
+      setStatus('Saving CSV files...', 'loading');
+
       try {
-        const html = generateHTML();
-        const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.editedFile}`;
-        const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` }});
-        const sha = getRes.ok ? (await getRes.json()).sha : null;
+        let savedCount = 0;
+        
+        for (const event of eventsData) {
+          await saveEventCSV(event);
+          savedCount++;
+          setStatus(`Saving... ${savedCount}/${eventsData.length}`, 'loading');
+        }
+        
+        setStatus(`✅ Saved all ${savedCount} CSV files!`, 'success');
+      } catch (error) {
+        setStatus('❌ Error: ' + error.message, 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
 
-        const res = await fetch(url, {
-          method: 'PUT',
-          headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Update from Tablet Editor', content: toBase64(html), sha: sha })
+    async function saveEventCSV(event) {
+      const csv = generateCSV(event);
+      const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${event.fileName}`;
+      
+      // Get current file SHA
+      const getRes = await fetch(url, {
+        headers: {
+          'Authorization': `token ${githubConfig.token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      
+      if (!getRes.ok) throw new Error(`Failed to get ${event.fileName}`);
+      const data = await getRes.json();
+
+      // Update file
+      const putRes = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${githubConfig.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Updated ${event.fileName} from editor`,
+          content: btoa(csv),
+          sha: data.sha
+        })
+      });
+
+      if (!putRes.ok) throw new Error(`Failed to save ${event.fileName}`);
+    }
+
+    function generateCSV(event) {
+      let csv = '"Seq","Item","Gender","Age","Round","Heat","Time","Wind"\n';
+      csv += `${event.seq},${event.item},${event.gender},${event.age},${event.round},${event.heat},${event.time},\n`;
+      csv += '"Lane","Surname","Firstname","Number","Team"\n';
+      
+      if (event.athletes.length === 0) {
+        csv += 'No data\n';
+      } else {
+        event.athletes.forEach(athlete => {
+          const nameParts = athlete.athlete.split(' ');
+          const surname = nameParts[0] || '';
+          const firstname = nameParts.slice(1).join(' ') || '';
+          csv += `${athlete.lane},${surname},${firstname},${athlete.number},${athlete.team}\n`;
         });
-
-        if (res.ok) { 
-          setStatus('✅ Saved successfully!', 'success'); 
-          originalEventsData = JSON.parse(JSON.stringify(eventsData)); 
-        } else { throw new Error('Failed to save to GitHub'); }
-      } catch (e) { setStatus('❌ Error: ' + e.message, 'error'); }
-      finally { showLoading(false); }
+      }
+      
+      return csv;
     }
   </script>
 </body>
